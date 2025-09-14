@@ -44,6 +44,10 @@ public class Order {
     private LocalDateTime orderDate;
     private LocalDateTime deliveryDate;
     
+    private String paymentMethod;
+    private String paymentId;
+    private String orderNumber;
+    
     @PrePersist
     protected void onCreate() {
         orderDate = LocalDateTime.now();

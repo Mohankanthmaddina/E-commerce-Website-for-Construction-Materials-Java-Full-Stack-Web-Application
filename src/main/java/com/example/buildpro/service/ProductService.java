@@ -167,4 +167,29 @@ public class ProductService {
 
         productRepository.save(product);
     }
+
+    // Category management methods
+    public Category getCategoryById(Long id) {
+        return categoryRepository.findById(id).orElse(null);
+    }
+
+    public Category updateCategory(Long id, Category categoryDetails) {
+        Optional<Category> categoryOpt = categoryRepository.findById(id);
+        if (categoryOpt.isPresent()) {
+            Category category = categoryOpt.get();
+            category.setName(categoryDetails.getName());
+            category.setDescription(categoryDetails.getDescription());
+            category.setImageUrl(categoryDetails.getImageUrl());
+            return categoryRepository.save(category);
+        }
+        return null;
+    }
+
+    public boolean deleteCategory(Long id) {
+        if (categoryRepository.existsById(id)) {
+            categoryRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }

@@ -149,8 +149,22 @@
   }
 
   function updateCartCount() {
-    const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-    document.getElementById('cart-count').textContent = cartItems.length;
+    const userId = localStorage.getItem('currentUserId');
+    if (!userId) {
+        document.getElementById('cart-count').textContent = '0';
+        return;
+    }
+
+    fetch(`/cart?userId=${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            const count = data.items ? data.items.length : 0;
+            document.getElementById('cart-count').textContent = count;
+        })
+        .catch(err => {
+            console.error('Error fetching cart count:', err);
+            document.getElementById('cart-count').textContent = '0';
+        });
   }
 </script>
 

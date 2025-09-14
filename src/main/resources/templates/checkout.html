@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - BuildPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='/'">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-hard-hat text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-blue-600">BuildPro</span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative cursor-pointer" onclick="goToCart()">
+                        <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
+                        <span class="cart-badge" id="cart-count">0</span>
+                    </div>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="logout()">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto my-12 px-4">
+        <!-- Hidden userId for JavaScript -->
+        <input type="hidden" id="current-user-id" th:value="${userId}">
+        
+        <!-- Success Message -->
+        <div th:if="${param.success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span th:text="${param.success}"></span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Address Selection -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-semibold mb-6">Delivery Address</h2>
+                    
+                    <!-- Existing Addresses -->
+                    <div th:if="${!addresses.empty}" class="space-y-4 mb-6">
+                        <h3 class="text-lg font-medium">Select Address</h3>
+                        <div th:each="address : ${addresses}" class="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 address-option" 
+                             th:onclick="'selectAddress(' + ${address.id} + ')'">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h4 class="font-semibold" th:text="${address.name}">John Doe</h4>
+                                    <p th:text="${address.addressLine1}">123 Main Street</p>
+                                    <p th:text="${address.addressLine2}">Apt 4B</p>
+                                    <p th:text="${address.city + ', ' + address.state + ' - ' + address.postalCode}">Mumbai, Maharashtra - 400001</p>
+                                    <p th:text="'Phone: ' + ${address.phone}">Phone: +91 9876543210</p>
+                                </div>
+                                <input type="radio" name="selectedAddress" th:value="${address.id}" class="mt-2">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add New Address Form -->
+                    <div class="border-t pt-6">
+                        <h3 class="text-lg font-medium mb-4">Add New Address</h3>
+                        <form th:action="@{/checkout/address}" method="POST" class="space-y-4">
+                            <input type="hidden" name="userId" th:value="${userId}">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                    <input type="text" name="name" required
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                                    <input type="tel" name="phone" required
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Address Line 1 *</label>
+                                <input type="text" name="addressLine1" required
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
+                                <input type="text" name="addressLine2"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                                    <input type="text" name="city" required
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                                    <input type="text" name="state" required
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Postal Code *</label>
+                                    <input type="text" name="postalCode" required
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-plus mr-2"></i> Add Address
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div>
+                <div class="bg-white rounded-lg shadow p-6 sticky top-4">
+                    <h3 class="text-xl font-semibold mb-4">Order Summary</h3>
+                    
+                    <!-- Cart Items -->
+                    <div class="space-y-3 mb-4" th:if="${cart != null and !cart.cartItems.empty}">
+                        <div th:each="item : ${cart.cartItems}" class="flex justify-between items-center py-2 border-b">
+                            <div class="flex items-center space-x-3">
+                                <img th:src="${item.product.imageUrl}" alt="Product" class="w-12 h-12 object-cover rounded">
+                                <div>
+                                    <p class="font-medium text-sm" th:text="${item.product.name}"></p>
+                                    <p class="text-xs text-gray-500" th:text="'Qty: ' + ${item.quantity}"></p>
+                                </div>
+                            </div>
+                            <span class="font-semibold text-sm" th:text="'₹' + ${#numbers.formatDecimal(item.quantity * item.product.price, 1, 2)}"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-6">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span th:text="'₹' + ${#numbers.formatDecimal(subtotal, 1, 2)}">₹0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Delivery</span>
+                            <span th:text="'₹' + ${#numbers.formatDecimal(deliveryCharge, 1, 2)}">₹0.00</span>
+                        </div>
+                        <div class="flex justify-between text-green-600" th:if="${discount > 0}">
+                            <span>Cluster Discount (15%)</span>
+                            <span th:text="'-₹' + ${#numbers.formatDecimal(discount, 1, 2)}">-₹0.00</span>
+                        </div>
+                        <div class="border-t pt-2">
+                            <div class="flex justify-between font-semibold text-lg">
+                                <span>Total</span>
+                                <span th:text="'₹' + ${#numbers.formatDecimal(total, 1, 2)}">₹0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="proceed-to-payment" onclick="proceedToPayment()" 
+                            class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled>
+                        <i class="fas fa-credit-card mr-2"></i> Proceed to Payment
+                    </button>
+                    
+                    <p class="text-xs text-gray-500 mt-2 text-center">
+                        Please select a delivery address to continue
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedAddressId = null;
+
+        function selectAddress(addressId) {
+            selectedAddressId = addressId;
+            
+            // Update UI
+            document.querySelectorAll('.address-option').forEach(option => {
+                option.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50');
+            });
+            
+            event.currentTarget.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50');
+            event.currentTarget.querySelector('input[type="radio"]').checked = true;
+            
+            // Enable proceed button
+            document.getElementById('proceed-to-payment').disabled = false;
+            document.querySelector('.text-xs.text-gray-500').textContent = 'Ready to proceed to payment';
+        }
+
+        function proceedToPayment() {
+            if (!selectedAddressId) {
+                alert('Please select a delivery address');
+                return;
+            }
+            
+            // Get userId from the hidden input field
+            const userId = document.getElementById('current-user-id').value;
+            console.log('Debug - userId from hidden input:', userId);
+            console.log('Debug - userId type:', typeof userId);
+            console.log('Debug - userId length:', userId ? userId.length : 'null/undefined');
+            console.log('Debug - selectedAddressId:', selectedAddressId);
+            
+            if (!userId || userId === 'null' || userId === 'undefined' || userId.trim() === '') {
+                alert('User ID not found. Please try again.');
+                console.log('Debug - userId is empty, null, or undefined');
+                console.log('Debug - Hidden input element:', document.getElementById('current-user-id'));
+                console.log('Debug - Hidden input value:', document.getElementById('current-user-id').value);
+                return;
+            }
+            
+            // Redirect to payment with selected address and userId
+            const url = `/checkout/proceed-to-payment?addressId=${selectedAddressId}&userId=${userId}`;
+            console.log('Debug - Redirecting to URL:', url);
+            window.location.href = url;
+        }
+
+        function goToCart() {
+            const userId = document.getElementById('current-user-id').value;
+            if (!userId) {
+                alert("User ID not found. Please try again.");
+                return;
+            }
+            window.location.href = `/cart/view?userId=${userId}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUserId');
+            localStorage.removeItem('cartItems');
+            window.location.href = '/';
+        }
+
+        function updateCartCount() {
+            const userId = document.getElementById('current-user-id').value;
+            if (!userId) {
+                document.getElementById('cart-count').textContent = '0';
+                return;
+            }
+
+            fetch(`/cart?userId=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const count = data.items ? data.items.length : 0;
+                    document.getElementById('cart-count').textContent = count;
+                })
+                .catch(err => {
+                    console.error('Error fetching cart count:', err);
+                    document.getElementById('cart-count').textContent = '0';
+                });
+        }
+
+        // Initialize
+        updateCartCount();
+        
+        // Debug: Check if userId is available
+        document.addEventListener('DOMContentLoaded', function() {
+            const userId = document.getElementById('current-user-id').value;
+            console.log('Debug - Page loaded, userId:', userId);
+            console.log('Debug - userId type:', typeof userId);
+            console.log('Debug - userId length:', userId ? userId.length : 'null/undefined');
+        });
+    </script>
+
+</body>
+</html>

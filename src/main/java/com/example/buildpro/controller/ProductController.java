@@ -15,7 +15,9 @@ import java.util.Optional;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import com.example.buildpro.model.User;
+import com.example.buildpro.model.Cart;
 import com.example.buildpro.service.UserService;
+import com.example.buildpro.service.CartService;
 import java.util.Map;
 
 @Controller
@@ -33,9 +35,19 @@ public class ProductController {
     private CartService cartService;
     
     @GetMapping("/view")
-    public String productsPage(Model model, Principal principal) {
-        List<Product> products = productService.getAllProducts();
+    public String productsPage(Model model, Principal principal, @RequestParam(required = false) String category) {
+        List<Product> products;
+        List<Category> categories = productService.getAllCategories();
+        
+        if (category != null && !category.isEmpty()) {
+            products = productService.getProductsByCategory(category);
+            model.addAttribute("selectedCategory", category);
+        } else {
+            products = productService.getAllProducts();
+        }
+        
         model.addAttribute("products", products);
+        model.addAttribute("categories", categories);
 
         if (principal != null) {
             String email = principal.getName(); // Spring Security provides this
@@ -84,6 +96,28 @@ public class ProductController {
     @GetMapping("/categories")
     public ResponseEntity<List<Category>> getAllCategories() {
         return ResponseEntity.ok(productService.getAllCategories());
-    }   
+    }
+
+    // Add to cart endpoint
+    @PostMapping("/add/{productId}")
+    @ResponseBody
+    public ResponseEntity<String> addToCart(@PathVariable Long productId, @RequestBody Map<String, Object> requestBody) {
+        try {
+            Long userId = Long.valueOf(requestBody.get("userId").toString());
+            
+            // Get user
+            Optional<User> userOpt = userService.findById(userId);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            // Add to cart using cart service
+            Cart cart = cartService.addToCart(userOpt.get(), productId, 1);
+            
+            return ResponseEntity.ok("Product added to cart successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error adding product to cart: " + e.getMessage());
+        }
+    }
 }
 

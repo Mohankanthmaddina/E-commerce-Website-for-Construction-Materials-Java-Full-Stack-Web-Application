@@ -350,6 +350,81 @@ public class AdminController {
                 .toList());
     }
 
+    // Category Management
+    @GetMapping("/categories")
+    public String getCategories(Model model) {
+        model.addAttribute("categories", productService.getAllCategories());
+        return "admin-categories";
+    }
+
+    @GetMapping("/categories/add")
+    public String addCategoryForm(Model model) {
+        model.addAttribute("category", new com.example.buildpro.model.Category());
+        return "admin-add-category";
+    }
+
+    @PostMapping("/categories/add")
+    public String addCategory(@ModelAttribute com.example.buildpro.model.Category category, Model model) {
+        try {
+            if (category.getName() == null || category.getName().trim().isEmpty()) {
+                model.addAttribute("error", "Category name is required");
+                model.addAttribute("category", category);
+                return "admin-add-category";
+            }
+            productService.createCategory(category);
+            return "redirect:/admin/categories?success=Category added successfully";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error adding category: " + e.getMessage());
+            model.addAttribute("category", category);
+            return "admin-add-category";
+        }
+    }
+
+    @GetMapping("/categories/edit/{id}")
+    public String editCategoryForm(@PathVariable Long id, Model model) {
+        try {
+            com.example.buildpro.model.Category category = productService.getCategoryById(id);
+            if (category == null) {
+                return "redirect:/admin/categories?error=Category not found";
+            }
+            model.addAttribute("category", category);
+            return "admin-edit-category";
+        } catch (Exception e) {
+            return "redirect:/admin/categories?error=Error loading category: " + e.getMessage();
+        }
+    }
+
+    @PostMapping("/categories/edit/{id}")
+    public String updateCategory(@PathVariable Long id, @ModelAttribute com.example.buildpro.model.Category category, Model model) {
+        try {
+            if (category.getName() == null || category.getName().trim().isEmpty()) {
+                model.addAttribute("error", "Category name is required");
+                model.addAttribute("category", category);
+                return "admin-edit-category";
+            }
+            productService.updateCategory(id, category);
+            return "redirect:/admin/categories?success=Category updated successfully";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error updating category: " + e.getMessage());
+            model.addAttribute("category", category);
+            return "admin-edit-category";
+        }
+    }
+
+    @PostMapping("/categories/delete/{id}")
+    public String deleteCategory(@PathVariable Long id) {
+        try {
+            boolean deleted = productService.deleteCategory(id);
+            if (deleted) {
+                return "redirect:/admin/categories?success=Category deleted successfully";
+            } else {
+                return "redirect:/admin/categories?error=Category not found";
+            }
+        } catch (Exception e) {
+            return "redirect:/admin/categories?error=Error deleting category: " + e.getMessage();
+        }
+    }
+
     @GetMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response) {
         // Invalidate the session and removing the current session

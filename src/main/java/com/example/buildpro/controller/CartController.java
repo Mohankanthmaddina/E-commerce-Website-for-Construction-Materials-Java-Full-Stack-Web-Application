@@ -41,8 +41,9 @@ public class CartController {
         return "cart";  // cart.html (Thymeleaf)
     }
      @GetMapping("/checkout")
-    public String checkoutPage() {
-        return "address"; // this will load checkout.html
+    public String checkoutPage(@RequestParam Long userId) {
+        System.out.println("Debug - CartController redirecting to checkout with userId: " + userId);
+        return "redirect:/checkout?userId=" + userId; // redirect to checkout page with address selection
     }
 
     
@@ -59,11 +60,14 @@ public class CartController {
         }
 
         User user = userOpt.get();
-        Cart cart = cartService.getCartByUser(user);
+        Cart cart = cartService.getOrCreateCart(user); // Use getOrCreateCart instead
 
         if (cart == null || cart.getCartItems().isEmpty()) {
             System.out.println("Cart is empty for userId: " + userId);
-            return ResponseEntity.ok(new CartDTO()); // return empty DTO
+            CartDTO emptyCart = new CartDTO();
+            emptyCart.setCartId(cart != null ? cart.getId() : null);
+            emptyCart.setItems(new java.util.ArrayList<>());
+            return ResponseEntity.ok(emptyCart);
         }
 
         // Map Cart -> CartDTO

@@ -59,10 +59,28 @@
 
     <!-- ✅ Product Cards -->
     <div class="max-w-7xl mx-auto my-12 px-4">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Available Products</h1>
-
-        <div class="max-w-7xl mx-auto my-12 px-4">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Available Products</h1>
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                <span th:if="${selectedCategory}" th:text="'Products in ' + ${selectedCategory}"></span>
+                <span th:unless="${selectedCategory}">Available Products</span>
+            </h1>
+            <div class="flex items-center space-x-4">
+                <!-- Category Filter -->
+                <select id="categoryFilter" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" onchange="filterByCategory()">
+                    <option value="">All Categories</option>
+                    <option th:each="cat : ${categories}" 
+                            th:value="${cat.name}" 
+                            th:text="${cat.name}"
+                            th:selected="${cat.name == selectedCategory}">
+                    </option>
+                </select>
+                <button th:if="${selectedCategory}" 
+                        onclick="clearFilter()" 
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors">
+                    Clear Filter
+                </button>
+            </div>
+        </div>
 
     <div class="space-y-6">
         <!-- Loop over products: one per row -->
@@ -107,27 +125,98 @@
         }
 
         function addToCart(productId) {
-        const userId = localStorage.getItem('currentUserId'); // only the ID
-        //alert("Adding product " + productId + " to cart for user " + userId + " ! 🛒");
-        if (!userId) {
-            alert("Please login first! 🔒");
-            return;
+            const userId = localStorage.getItem('currentUserId');
+            if (!userId) {
+                alert("Please login first! 🔒");
+                window.location.href = "/login";
+                return;
+            }
+
+            // Show loading state
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = "Adding...";
+            button.disabled = true;
+
+            fetch(`/products/add/${productId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: parseInt(userId) })
+            })
+            .then(response => response.text())
+            .then(msg => {
+                if (msg.includes("successfully")) {
+                    // Update cart count
+                    updateCartCount();
+                    // Show success message
+                    showNotification("Product added to cart!", "success");
+                } else {
+                    showNotification("Error: " + msg, "error");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showNotification("Error adding product to cart", "error");
+            })
+            .finally(() => {
+                button.textContent = originalText;
+                button.disabled = false;
+            });
         }
 
-        fetch(`/products/add/${productId}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: userId })
-        })
+        function buyNow(productId) {
+            const userId = localStorage.getItem('currentUserId');
+            if (!userId) {
+                alert("Please login first to buy products! 🔒");
+                window.location.href = "/login";
+                return;
+            }
 
-        .then(response => response.text())
-        .then(msg => {
-            //alert(msg);
-            // Optional: update cart badge
-            const cartCountElem = document.getElementById('cart-count');
-            cartCountElem.textContent = parseInt(cartCountElem.textContent) + 1;
-        })
-        .catch(err => console.error(err));
+            // Show loading state
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = "Processing...";
+            button.disabled = true;
+
+            // Add product to cart first
+            fetch(`/products/add/${productId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: parseInt(userId) })
+            })
+            .then(response => response.text())
+            .then(msg => {
+                if (msg.includes("successfully")) {
+                    // Redirect to checkout
+                    window.location.href = `/checkout?userId=${userId}&buyNow=true`;
+                } else {
+                    showNotification("Error: " + msg, "error");
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showNotification("Error processing buy now", "error");
+                button.textContent = originalText;
+                button.disabled = false;
+            });
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
 
@@ -144,6 +233,44 @@
             }
             window.location.href = `/cart/view?userId=${userId}`;
         }
+
+        function filterByCategory() {
+            const category = document.getElementById('categoryFilter').value;
+            if (category) {
+                window.location.href = `/products/view?category=${encodeURIComponent(category)}`;
+            } else {
+                window.location.href = '/products/view';
+            }
+        }
+
+        function clearFilter() {
+            window.location.href = '/products/view';
+        }
+
+        // Initialize cart count
+        function updateCartCount() {
+            const userId = localStorage.getItem('currentUserId');
+            if (!userId) {
+                document.getElementById('cart-count').textContent = '0';
+                return;
+            }
+
+            fetch(`/cart?userId=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const count = data.items ? data.items.length : 0;
+                    document.getElementById('cart-count').textContent = count;
+                })
+                .catch(err => {
+                    console.error('Error fetching cart count:', err);
+                    document.getElementById('cart-count').textContent = '0';
+                });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartCount();
+        });
 
     </script>
 </body>

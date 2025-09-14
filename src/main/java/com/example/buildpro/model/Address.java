@@ -17,6 +17,12 @@ public class Address {
     private User user;
     
     @Column(nullable = false)
+    private String name;
+    
+    @Column(nullable = false)
+    private String phone;
+    
+    @Column(nullable = false)
     private String addressLine1;
     
     private String addressLine2;
