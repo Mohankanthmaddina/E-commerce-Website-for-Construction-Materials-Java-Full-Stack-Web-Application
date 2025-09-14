@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - BuildPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .payment-method {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .payment-method.selected {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <nav class="bg-white shadow-lg py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index.html'">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-hard-hat text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-blue-600">BuildPro</span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative cursor-pointer" onclick="window.location.href='cart.html'">
+                        <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
+                        <span class="cart-badge" id="cart-count">0</span>
+                    </div>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="logout()">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto my-12 px-4">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8">Payment</h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-xl font-semibold mb-4">Payment Method</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="payment-method" onclick="selectPayment('card')">
+                            <div class="flex items-center">
+                                <input type="radio" name="payment" id="card" class="mr-3">
+                                <label for="card" class="font-semibold">Credit/Debit Card</label>
+                            </div>
+                            <div class="mt-3 hidden" id="card-details">
+                                <div class="space-y-3">
+                                    <input type="text" placeholder="Card Number" class="w-full p-2 border rounded">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="text" placeholder="MM/YY" class="p-2 border rounded">
+                                        <input type="text" placeholder="CVV" class="p-2 border rounded">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-method" onclick="selectPayment('upi')">
+                            <div class="flex items-center">
+                                <input type="radio" name="payment" id="upi" class="mr-3">
+                                <label for="upi" class="font-semibold">UPI</label>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-method" onclick="selectPayment('cod')">
+                            <div class="flex items-center">
+                                <input type="radio" name="payment" id="cod" class="mr-3">
+                                <label for="cod" class="font-semibold">Cash on Delivery</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-semibold mb-4">Delivery Address</h3>
+                    <div id="address-display" class="text-gray-700">
+                        <!-- Address will be displayed here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-semibold mb-4">Order Summary</h3>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between">
+                            <span>Items Total</span>
+                            <span id="payment-subtotal">₹0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Delivery</span>
+                            <span id="payment-delivery">₹0.00</span>
+                        </div>
+                        <div class="flex justify-between text-green-600">
+                            <span>Discount</span>
+                            <span id="payment-discount">-₹0.00</span>
+                        </div>
+                        <div class="border-t pt-2">
+                            <div class="flex justify-between font-semibold text-lg">
+                                <span>Total</span>
+                                <span id="payment-total">₹0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-gift text-green-600 mr-2"></i>
+                            <span class="font-semibold">Cluster Benefit Applied!</span>
+                        </div>
+                        <p class="text-sm text-green-700 mt-1">You saved 5% on delivery charges through our cluster discount system.</p>
+                    </div>
+                    
+                    <button class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors" onclick="processPayment()">
+                        Complete Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedPayment = '';
+
+        function selectPayment(method) {
+            selectedPayment = method;
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            document.querySelector(`#${method}`).checked = true;
+        }
+
+        function updateOrderSummary() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const delivery = subtotal > 0 ? 200 : 0;
+            const discount = delivery * 0.05; // 5% discount
+            const total = subtotal + delivery - discount;
+
+            document.getElementById('payment-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('payment-delivery').textContent = `₹${delivery.toFixed(2)}`;
+            document.getElementById('payment-discount').textContent = `-₹${discount.toFixed(2)}`;
+            document.getElementById('payment-total').textContent = `₹${total.toFixed(2)}`;
+        }
+
+        function displayAddress() {
+            const address = JSON.parse(localStorage.getItem('deliveryAddress')) || {};
+            document.getElementById('address-display').innerHTML = `
+                <p class="font-semibold">${address.name}</p>
+                <p>${address.address1}</p>
+                ${address.address2 ? `<p>${address.address2}</p>` : ''}
+                <p>${address.city}, ${address.state} - ${address.postalCode}</p>
+                <p>Phone: ${address.phone}</p>
+            `;
+        }
+
+        function processPayment() {
+            if (!selectedPayment) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            // Create order
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const address = JSON.parse(localStorage.getItem('deliveryAddress')) || {};
+            const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+            
+            const order = {
+                id: Date.now(),
+                userId: user.id,
+                items: cart,
+                address: address,
+                total: parseInt(document.getElementById('payment-total').textContent.replace('₹', '')),
+                status: 'confirmed',
+                date: new Date().toISOString(),
+                paymentMethod: selectedPayment
+            };
+
+            // Save order
+            const orders = JSON.parse(localStorage.getItem('orders')) || [];
+            orders.push(order);
+            localStorage.setItem('orders', JSON.stringify(orders));
+
+            // Clear cart
+            localStorage.removeItem('cart');
+
+            alert('Order placed successfully!');
+            window.location.href = 'index.html';
+        }
+
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            document.getElementById('cart-count').textContent = cart.length;
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        // Initialize
+        updateCartCount();
+        updateOrderSummary();
+        displayAddress();
+    </script>
+</body>
+</html>

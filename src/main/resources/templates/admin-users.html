@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - BuildPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-sidebar {
+            min-height: calc(100vh - 80px);
+            background: #1f2937;
+        }
+        .admin-menu {
+            color: white;
+            padding: 12px 20px;
+            display: block;
+            transition: background 0.3s;
+        }
+        .admin-menu:hover, .admin-menu.active {
+            background: #374151;
+        }
+        .role-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .role-user { background: #dbeafe; color: #1e40af; }
+        .role-admin { background: #fef3c7; color: #92400e; }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-verified { background: #d1fae5; color: #065f46; }
+        .status-unverified { background: #fee2e2; color: #991b1b; }
+    </style>
+
+    <script>
+        // Logout function
+        function logout() {
+            window.location.href = '/admin/logout';
+        }
+
+        // Edit user - redirect to user details page
+        function editUser(userId, userName, userEmail, isVerified) {
+            console.log('Edit user called with:', {userId, userName, userEmail, isVerified});
+            window.location.href = '/admin/users/' + userId;
+        }
+
+        // Toggle user verification status
+        function toggleUserVerification(userId, currentStatus) {
+            console.log('toggleUserVerification called with:', {userId, currentStatus});
+            
+            const newStatus = !currentStatus;
+            const statusText = newStatus ? 'Verified' : 'Unverified';
+            
+            if (confirm(`Change user verification status to ${statusText}?`)) {
+                console.log('User confirmed, submitting form...');
+                
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/users/' + userId + '/verification';
+                
+                const statusInput = document.createElement('input');
+                statusInput.type = 'hidden';
+                statusInput.name = 'isVerified';
+                statusInput.value = newStatus.toString();
+                form.appendChild(statusInput);
+                
+                console.log('Form action:', form.action);
+                console.log('isVerified value:', statusInput.value);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+    </script>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <nav class="bg-white shadow-lg py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='/admin/dashboard'">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-hard-hat text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-blue-600">BuildPro Admin</span>
+                </div>
+                <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors" onclick="logout()">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <div class="admin-sidebar w-64">
+            <div class="p-4">
+                <div class="text-white text-lg font-semibold mb-6">Admin Panel</div>
+                <a href="/admin/dashboard" class="admin-menu">
+                    <i class="fas fa-chart-line mr-3"></i> Dashboard
+                </a>
+                <a href="/admin/products" class="admin-menu">
+                    <i class="fas fa-boxes mr-3"></i> Products
+                </a>
+                <a href="/admin/orders" class="admin-menu">
+                    <i class="fas fa-shopping-cart mr-3"></i> Orders
+                </a>
+                <a href="/admin/users" class="admin-menu active">
+                    <i class="fas fa-users mr-3"></i> Users
+                </a>
+                <a href="#" class="admin-menu">
+                    <i class="fas fa-chart-bar mr-3"></i> Reports
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8">
+            <!-- Success Message -->
+            <div th:if="${param.success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span th:text="${param.success}"></span>
+            </div>
+            
+            <!-- Error Message -->
+            <div th:if="${param.error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span th:text="${param.error}"></span>
+            </div>
+            
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">User Management</h1>
+                <div class="flex gap-4">
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="window.location.reload()">
+                        <i class="fas fa-sync-alt mr-2"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr th:if="${#lists.isEmpty(users)}">
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    No users found.
+                                </td>
+                            </tr>
+                            <tr th:each="user : ${users}">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-user text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-medium" th:text="${user.name}"></div>
+                                            <div class="text-sm text-gray-500">ID: <span th:text="${user.id}"></span></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4" th:text="${user.email}"></td>
+                                <td class="px-6 py-4">
+                                    <span th:class="'role-badge role-' + ${#strings.toLowerCase(user.role)}" 
+                                          th:text="${user.role}"></span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span th:class="'status-badge status-' + ${#strings.toLowerCase(user.statusDisplay)}" 
+                                          th:text="${user.statusDisplay}"></span>
+                                </td>
+                                <td class="px-6 py-4" th:text="${user.createdAtDisplay}"></td>
+                                <td class="px-6 py-4">
+                                    <div class="flex gap-2">
+                                        <button onclick="editUser(${user.id}, '${user.name}', '${user.email}', ${user.isVerified})" 
+                                                class="text-blue-600 hover:text-blue-800 text-sm">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button th:data-user-id="${user.id}" th:data-verified="${user.isVerified}"
+                                                onclick="toggleUserVerification(this.dataset.userId, this.dataset.verified === 'true')"
+                                                class="text-green-600 hover:text-green-800 text-sm">
+                                            <i class="fas fa-user-check"></i> Toggle Verification
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- User Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-users text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Total Users</p>
+                            <p class="text-2xl font-bold" th:text="${#lists.size(users)}">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-user-check text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Verified Users</p>
+                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(users) ? 0 : #lists.size(#lists.select(users, user.isVerified))}">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-user-shield text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Admins</p>
+                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(users) ? 0 : #lists.size(#lists.select(users, user.role == T(com.example.buildpro.model.User$Role).ADMIN))}">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-user text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Regular Users</p>
+                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(users) ? 0 : #lists.size(#lists.select(users, user.role == T(com.example.buildpro.model.User$Role).USER))}">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

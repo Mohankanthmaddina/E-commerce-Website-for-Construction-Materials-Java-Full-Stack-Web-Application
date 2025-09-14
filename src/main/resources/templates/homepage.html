@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildPro - Construction Materials Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #f59e0b;
+            --accent: #10b981;
+            --dark: #1f2937;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index'">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-hard-hat text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-blue-600">BuildPro</span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/homepage" class="text-gray-700 hover:text-blue-600 transition-colors">Home</a>
+                    <a href="categories/view" class="text-gray-700 hover:text-blue-600 transition-colors">Categories</a>
+                    <a href="products/view" class="text-gray-700 hover:text-blue-600 transition-colors">Products</a>
+                </div>
+
+                <!-- Right side -->
+                <div class="flex items-center space-x-4">
+                    <div class="relative cursor-pointer" onclick="goToCart()">
+                        <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
+                        <span class="cart-badge" id="cart-count">0</span>
+                    </div>
+                    <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors hidden md:block" onclick="logout()">
+                        Logout
+                    </button>
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden text-gray-700" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Dropdown Menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4 space-y-4">
+                <a href="/homepage" class="block text-gray-700 hover:text-blue-600 transition-colors">Home</a>
+                <a href="categories/view" class="block text-gray-700 hover:text-blue-600 transition-colors">Categories</a>
+                <a href="products/view" class="block text-gray-700 hover:text-blue-600 transition-colors">Products</a>
+                <button class="bg-blue-600 text-white w-full px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="logout()">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h1 class="text-5xl font-bold mb-6">Premium Construction Materials</h1>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">Discover the finest construction materials from trusted brands. Quality assured with competitive pricing and smart delivery solutions.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-orange-500 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-orange-600 transition-colors" onclick="window.location.href='products/view'">
+                    Explore Products
+                </button>
+                <button class="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors" onclick="checkAuth()">
+                    Supplier Login
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Why Choose BuildPro?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center p-6 card-hover rounded-lg">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-truck text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Smart Delivery</h3>
+                    <p class="text-gray-600">Get 5% discount on delivery when orders are within 20km radius clusters</p>
+                </div>
+                <div class="text-center p-6 card-hover rounded-lg">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Quality Assured</h3>
+                    <p class="text-gray-600">All materials are quality tested and from trusted brands only</p>
+                </div>
+                <div class="text-center p-6 card-hover rounded-lg">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-wallet text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Wallet Rewards</h3>
+                    <p class="text-gray-600">Earn wallet balance from cluster discounts and referral programs</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Categories -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Popular Categories</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="bg-white rounded-lg p-6 text-center card-hover cursor-pointer" onclick="window.location.href='categories/view'">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-cubes text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold">Cement & Concrete</h3>
+                </div>
+                <div class="bg-white rounded-lg p-6 text-center card-hover cursor-pointer" onclick="window.location.href='categories/view'">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-hammer text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold">Tools & Equipment</h3>
+                </div>
+                <div class="bg-white rounded-lg p-6 text-center card-hover cursor-pointer" onclick="window.location.href='categories/view'">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bolt text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold">Electrical</h3>
+                </div>
+                <div class="bg-white rounded-lg p-6 text-center card-hover cursor-pointer" onclick="window.location.href='categories/view'">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-tint text-yellow-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold">Plumbing</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById("mobile-menu");
+            menu.classList.toggle("hidden");
+        }
+        function checkAuth() {
+            
+                window.location.href = 'login';
+        }
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('cartItems');
+            window.location.href = '/';
+        }
+
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            document.getElementById('cart-count').textContent = cart.length;
+        }
+
+        function goToCart() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) {
+                alert("Please login first to view your cart!");
+                window.location.href = "/login";
+                return;
+            }
+            window.location.href = `/cart/view?userId=${userId}`;
+        }
+
+        // Initialize demo data if not exists
+        if (!localStorage.getItem('users')) {
+            const demoUsers = [
+                { id: 1, email: 'user@demo.com', password: 'user123', name: 'Demo User', role: 'user', verified: true },
+                { id: 2, email: 'admin@demo.com', password: 'admin123', name: 'Admin User', role: 'admin', verified: true }
+            ];
+            localStorage.setItem('users', JSON.stringify(demoUsers));
+        }
+
+        if (!localStorage.getItem('products')) {
+            const demoProducts = [
+                { id: 1, name: 'UltraTech Cement', category: 'cement', brand: 'UltraTech', price: 380, description: 'Premium quality Portland cement for construction', image: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/0d37c5c6-0ae9-418f-b8f9-c8facb461a7e.png' },
+                { id: 2, name: 'JSW Steel TMT Bars', category: 'steel', brand: 'JSW', price: 65000, description: 'High strength thermo-mechanically treated steel bars', image: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e9614180-6cfa-466a-8153-68ccb6cc1f46.png' },
+                { id: 3, name: 'ACC Concrete Blocks', category: 'bricks', brand: 'ACC', price: 45, description: 'Durable concrete blocks for construction', image: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/bfbeff3e-85b2-49f8-ab93-b913cad1f092.png' }
+            ];
+            localStorage.setItem('products', JSON.stringify(demoProducts));
+        }
+
+        updateCartCount();
+    </script>
+</body>
+</html>
+

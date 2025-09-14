@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categories - BuildPro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .category-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .category-card:hover {
+      transform: scale(1.05);
+    }
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+<!-- Navbar -->
+<nav class="bg-white shadow-lg py-4">
+  <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+    <!-- Logo -->
+    <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='/index'">
+      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+        <i class="fas fa-hard-hat text-white text-xl"></i>
+      </div>
+      <span class="text-2xl font-bold text-blue-600">BuildPro</span>
+    </div>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex items-center space-x-8">
+      <a href="/homepage" class="text-gray-700 hover:text-blue-600 transition-colors">Home</a>
+      <a href="/categories/view" class="text-blue-600 font-semibold">Categories</a>
+      <a href="/products/view" class="text-gray-700 hover:text-blue-600 transition-colors">Products</a>
+    </div>
+
+    <!-- Right Section -->
+    <div class="flex items-center space-x-4">
+      <div class="relative cursor-pointer" onclick="goToCart()">
+        <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
+        <span class="cart-badge" id="cart-count">0</span>
+      </div>
+      <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors hidden md:block" onclick="logout()">
+        Logout
+      </button>
+
+      <!-- Mobile Hamburger -->
+      <button id="menu-btn" class="md:hidden text-gray-700 text-2xl focus:outline-none">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="hidden md:hidden px-4 pt-4 pb-2 space-y-2 bg-gray-50">
+    <a href="/homepage" class="block text-gray-700 hover:text-blue-600">Home</a>
+    <a href="/categories/view" class="block text-blue-600 font-semibold">Categories</a>
+    <a href="/products/view" class="block text-gray-700 hover:text-blue-600">Products</a>
+    <button class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="logout()">
+      Logout
+    </button>
+  </div>
+</nav>
+
+<!-- Content -->
+<div class="max-w-7xl mx-auto my-12 px-4">
+  <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Construction Material Categories</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="category-list">
+    <!-- Categories will load here -->
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    updateCartCount();
+    fetchCategories();
+
+    // Mobile menu toggle
+    document.getElementById("menu-btn").addEventListener("click", function () {
+      document.getElementById("mobile-menu").classList.toggle("hidden");
+    });
+  });
+
+  function fetchCategories() {
+    fetch("/categories") // ✅ relative path (works on PC & mobile)
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById("category-list");
+        container.innerHTML = "";
+        data.forEach(category => {
+          const div = document.createElement("div");
+          div.className = "category-card cursor-pointer";
+          div.onclick = () => showProducts(category.name);
+
+          div.innerHTML = `
+            <div class="h-48 overflow-hidden">
+              <img src="${category.imageUrl || 'https://via.placeholder.com/300'}" 
+                   alt="${category.name}" 
+                   class="w-full h-full object-cover">
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold text-lg mb-2">${category.name}</h3>
+              <p class="text-gray-600">${category.description || ''}</p>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(err => console.error("Error fetching categories:", err));
+  }
+
+  function goToCart() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) {
+                alert("Please login first to view your cart!");
+                window.location.href = "/login";
+                return;
+            }
+            window.location.href = `/cart/view?userId=${userId}`;
+        }
+
+  function showProducts(category) {
+    localStorage.setItem('selectedCategory', category);
+    window.location.href = '/products/view';
+  }
+
+  function logout() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('cartItems');
+    window.location.href = '/';
+  }
+
+  function updateCartCount() {
+    const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+    document.getElementById('cart-count').textContent = cartItems.length;
+  }
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

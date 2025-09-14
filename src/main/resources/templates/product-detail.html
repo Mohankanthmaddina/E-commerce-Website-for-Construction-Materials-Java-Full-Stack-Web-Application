@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - BuildPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #d1d5db;
+            background: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .quantity-input {
+            width: 60px;
+            height: 40px;
+            border: 1px solid #d1d5db;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <nav class="bg-white shadow-lg py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index.html'">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-hard-hat text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-blue-600">BuildPro</span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-blue-600 transition-colors">Home</a>
+                    <a href="categories.html" class="text-gray-700 hover:text-blue-600 transition-colors">Categories</a>
+                    <a href="products.html" class="text-gray-700 hover:text-blue-600 transition-colors">Products</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative cursor-pointer" onclick="window.location.href='cart.html'">
+                        <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
+                        <span class="cart-badge" id="cart-count">0</span>
+                    </div>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="logout()">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto my-12 px-4">
+        <button class="mb-6 text-blue-600 hover:text-blue-800 flex items-center" onclick="goBack()">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Products
+        </button>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/95ff34e3-7bc3-4530-adbc-568269c6a788.png" alt="Premium construction product detailed view with specifications and branding" class="w-full h-96 object-cover rounded-lg" id="product-detail-image">
+            </div>
+            
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2" id="product-detail-name">Product Name</h1>
+                <p class="text-gray-600 mb-4" id="product-detail-brand">Brand Name</p>
+                
+                <div class="flex items-center mb-6">
+                    <div class="text-2xl font-bold text-blue-600 mr-4" id="product-detail-price">₹0.00</div>
+                    <div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                        In Stock
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-2">Description</h3>
+                    <p class="text-gray-700" id="product-detail-description">Product description goes here...</p>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-2">Specifications</h3>
+                    <div class="space-y-2" id="product-detail-specs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Material:</span>
+                            <span class="font-medium">Premium Quality</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Weight:</span>
+                            <span class="font-medium">50kg</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Dimensions:</span>
+                            <span class="font-medium">Various sizes</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4 mb-6">
+                    <div class="flex items-center border rounded-lg">
+                        <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                        <input type="number" class="quantity-input" id="product-quantity" value="1" min="1" max="100">
+                        <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+                    </div>
+                    
+                    <button class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors" onclick="addToCart()">
+                        Add to Cart
+                    </button>
+                    
+                    <button class="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors" onclick="buyNow()">
+                        Buy Now
+                    </button>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-truck text-yellow-600 mr-2"></i>
+                        <span class="font-semibold">Delivery Info:</span>
+                    </div>
+                    <p class="text-sm text-yellow-700 mt-1">Free delivery within 10km. Get 5% discount when orders cluster within 20km radius.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProduct = null;
+        let currentQuantity = 1;
+
+        function loadProductDetails() {
+            const productId = localStorage.getItem('selectedProduct');
+            const products = JSON.parse(localStorage.getItem('products')) || [];
+            currentProduct = products.find(p => p.id == productId);
+            
+            if (currentProduct) {
+                document.getElementById('product-detail-name').textContent = currentProduct.name;
+                document.getElementById('product-detail-brand').textContent = currentProduct.brand;
+                document.getElementById('product-detail-price').textContent = `₹${currentProduct.price}`;
+                document.getElementById('product-detail-description').textContent = currentProduct.description;
+                document.getElementById('product-detail-image').src = currentProduct.image;
+            }
+        }
+
+        function increaseQuantity() {
+            currentQuantity++;
+            document.getElementById('product-quantity').value = currentQuantity;
+        }
+
+        function decreaseQuantity() {
+            if (currentQuantity > 1) {
+                currentQuantity--;
+                document.getElementById('product-quantity').value = currentQuantity;
+            }
+        }
+
+        function addToCart() {
+            if (!currentProduct) return;
+            
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingItem = cart.find(item => item.id === currentProduct.id);
+            
+            if (existingItem) {
+                existingItem.quantity += currentQuantity;
+            } else {
+                cart.push({
+                    ...currentProduct,
+                    quantity: currentQuantity
+                });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            alert('Product added to cart!');
+        }
+
+        function buyNow() {
+            addToCart();
+            window.location.href = 'cart.html';
+        }
+
+        function goBack() {
+            const category = localStorage.getItem('selectedCategory');
+            if (category) {
+                window.location.href = 'products.html';
+            } else {
+                window.location.href = 'categories.html';
+            }
+        }
+
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            document.getElementById('cart-count').textContent = cart.length;
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        // Initialize
+        updateCartCount();
+        loadProductDetails();
+    </script>
+</body>
+</html>
