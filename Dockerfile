@@ -20,3 +20,4 @@ EXPOSE 8080
 
 # Run the jar using sh -c (avoids PATH issues)
 CMD ["sh", "-c", "java -jar target/*.jar"]
+
