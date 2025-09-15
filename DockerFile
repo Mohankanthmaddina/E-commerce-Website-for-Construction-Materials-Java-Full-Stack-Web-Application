@@ -15,9 +15,8 @@ RUN chmod +x mvnw
 # Build the Spring Boot app
 RUN ./mvnw clean package -DskipTests
 
-
 # Expose port 8080
 EXPOSE 8080
 
-# Run the jar
-CMD ["java", "-jar", "target/buildpro-0.0.1-SNAPSHOT.jar"]
+# Run the jar using sh -c (avoids PATH issues)
+CMD ["sh", "-c", "java -jar target/*.jar"]
