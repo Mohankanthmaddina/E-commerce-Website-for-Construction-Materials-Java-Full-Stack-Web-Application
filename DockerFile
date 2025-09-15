@@ -9,12 +9,11 @@ COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 COPY src ./src
 
+# Give execute permission to Maven wrapper BEFORE running it
+RUN chmod +x mvnw
+
 # Build the Spring Boot app
 RUN ./mvnw clean package -DskipTests
-# Give execute permission to Maven wrapper
-RUN chmod +x mvnw
-# Give execute permission to Maven wrapper
-
 
 # Expose port 8080
 EXPOSE 8080
