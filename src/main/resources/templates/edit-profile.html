@@ -50,17 +50,18 @@
                     <div class="relative">
                         <button class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors" onclick="toggleProfileMenu()">
                             <i class="fas fa-user-circle text-2xl"></i>
-                            <span class="hidden md:block" th:text="${user.name}">User</span>
+                            <span class="hidden md:block" th:if="${user != null}" th:text="${user.name}">User</span>
+                            <span class="hidden md:block" th:if="${user == null}">Account</span>
                             <i class="fas fa-chevron-down text-sm"></i>
                         </button>
                         <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
-                            <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <a href="#" onclick="openMyProfile()" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                 <i class="fas fa-user mr-2"></i> My Profile
                             </a>
-                            <a href="/profile/orders" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <a href="#" onclick="openMyOrders()" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                 <i class="fas fa-shopping-bag mr-2"></i> My Orders
                             </a>
-                            <a href="/profile/edit" class="block px-4 py-2 text-blue-600 bg-blue-50">
+                            <a href="#" onclick="openEditProfile()" class="block px-4 py-2 text-blue-600 bg-blue-50">
                                 <i class="fas fa-edit mr-2"></i> Edit Profile
                             </a>
                             <hr class="my-2">
@@ -78,7 +79,7 @@
         <div class="bg-white rounded-lg shadow p-8">
             <div class="flex justify-between items-center mb-8">
                 <h1 class="text-2xl font-bold text-gray-800">Edit Profile</h1>
-                <a href="/profile" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors">
+                <a href="#" onclick="openMyProfile()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors">
                     <i class="fas fa-arrow-left mr-2"></i> Back to Profile
                 </a>
             </div>
@@ -91,6 +92,7 @@
 
             <!-- Edit Profile Form -->
             <form th:action="@{/profile/update}" th:object="${user}" method="POST" class="space-y-6">
+                <input type="hidden" name="userId" th:if="${user != null}" th:value="${user.id}">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Name -->
                     <div>
@@ -102,7 +104,9 @@
                     <!-- Email (Read-only) -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                        <input type="email" th:value="${user.email}" disabled
+                        <input type="email" th:if="${user != null}" th:value="${user.email}" disabled
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 text-gray-500">
+                        <input type="email" th:if="${user == null}" value="" disabled
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 text-gray-500">
                         <p class="text-sm text-gray-500 mt-1">Email cannot be changed</p>
                     </div>
@@ -110,8 +114,8 @@
                     <!-- Phone -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                        <input type="tel" th:field="*{phone}" placeholder="+91 9876543210"
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input type="tel" name="phone" placeholder="+91 9876543210"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
                     </div>
 
                     <!-- Role (Read-only) -->
@@ -133,15 +137,16 @@
                                 <p class="text-sm text-gray-600">Your email verification status</p>
                             </div>
                         </div>
-                        <span th:class="${user.isVerified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}" 
+                        <span th:if="${user != null}" th:class="${user.isVerified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}" 
                               class="px-3 py-1 rounded-full text-sm font-semibold"
                               th:text="${user.isVerified ? 'Verified' : 'Not Verified'}">Verified</span>
+                        <span th:if="${user == null}" class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-700">Unknown</span>
                     </div>
                 </div>
 
                 <!-- Submit Buttons -->
                 <div class="flex justify-end space-x-4">
-                    <a href="/profile" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg transition-colors">
+                    <a href="#" onclick="openMyProfile()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg transition-colors">
                         Cancel
                     </a>
                     <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
@@ -149,10 +154,29 @@
                     </button>
                 </div>
             </form>
+            <div th:if="${user == null}" class="mt-6 p-4 bg-yellow-50 text-yellow-800 rounded">
+                Cannot load user details. If you reached this page directly, please open from your dashboard.
+            </div>
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
+        // Auto-redirect with userId if missing context
+        const hasUser = [[${user != null}]];
+        if (!hasUser) {
+            const id = localStorage.getItem('currentUserId');
+            if (id) {
+                const u = new URL(window.location.href);
+                if (!u.searchParams.get('userId')) {
+                    window.location.replace('/profile/edit?userId=' + id);
+                }
+            }
+        }
+
+        function currentUserId() { return localStorage.getItem('currentUserId'); }
+        function openMyProfile() { const id = currentUserId(); if (!id) return; window.location.href = '/profile?userId=' + id; }
+        function openMyOrders() { const id = currentUserId(); if (!id) return; window.location.href = '/profile/orders?userId=' + id; }
+        function openEditProfile() { const id = currentUserId(); if (!id) return; window.location.href = '/profile/edit?userId=' + id; }
         function toggleProfileMenu() {
             const menu = document.getElementById('profile-menu');
             menu.classList.toggle('hidden');

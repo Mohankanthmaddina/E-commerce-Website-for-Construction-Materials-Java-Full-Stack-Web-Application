@@ -231,16 +231,16 @@ public class AdminController {
             User updatedUser = adminService.toggleUserVerification(userId, verifiedStatus);
             if (updatedUser == null) {
                 System.out.println("User not found with ID: " + userId);
-                return "redirect:/admin/dashboard?error=User not found";
+                return "redirect:/admin/users?error=User not found";
             }
 
             System.out.println("User " + userId + " verification status updated to: " + updatedUser.getIsVerified());
             System.out.println("=== VERIFICATION UPDATE SUCCESS ===");
-            return "redirect:/admin/dashboard?success=User verification status updated successfully";
+            return "redirect:/admin/users?success=User verification status updated successfully";
         } catch (Exception e) {
             System.err.println("Error updating user verification: " + e.getMessage());
             e.printStackTrace();
-            return "redirect:/admin/dashboard?error=Error updating user verification: " + e.getMessage();
+            return "redirect:/admin/users?error=Error updating user verification: " + e.getMessage();
         }
     }
 
@@ -254,24 +254,24 @@ public class AdminController {
             boolean deleted = adminService.deleteUser(userId);
             if (!deleted) {
                 System.out.println("User not found with ID: " + userId);
-                return "redirect:/admin/dashboard?error=User not found";
+                return "redirect:/admin/users?error=User not found";
             }
 
             System.out.println("User " + userId + " deleted successfully");
             System.out.println("=== DELETE USER SUCCESS ===");
 
-            // If it's an AJAX request, redirect back to dashboard to reload the page
+            // If it's an AJAX request, redirect back to users page to reload the page
             if ("true".equals(ajax)) {
-                return "redirect:/admin/dashboard?success=User deleted successfully";
+                return "redirect:/admin/users?success=User deleted successfully";
             }
 
-            return "redirect:/admin/dashboard?success=User deleted successfully";
+            return "redirect:/admin/users?success=User deleted successfully";
         } catch (Exception e) {
             System.err.println("Error deleting user: " + e.getMessage());
             e.printStackTrace();
 
             // Use a simple error message to avoid URL encoding issues
-            return "redirect:/admin/dashboard?error=Error deleting user";
+            return "redirect:/admin/users?error=Error deleting user";
         }
     }
 
@@ -331,6 +331,17 @@ public class AdminController {
         }
         return ResponseEntity.ok(updatedOrder);
     }
+
+    @PostMapping("/orders/{orderId}/delete")
+    public String deleteOrderWeb(@PathVariable Long orderId) {
+        boolean deleted = adminService.deleteOrder(orderId);
+        if (!deleted) {
+            return "redirect:/admin/orders?error=Order not found";
+        }
+        return "redirect:/admin/orders?success=Order deleted successfully";
+    }
+
+    
 
     @GetMapping("/sales-report")
     public ResponseEntity<Map<String, Object>> getSalesReport(

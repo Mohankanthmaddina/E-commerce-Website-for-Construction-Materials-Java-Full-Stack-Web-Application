@@ -85,6 +85,7 @@ public class PaymentService {
                 orderItem.setProduct(cartItem.getProduct());
                 orderItem.setQuantity(cartItem.getQuantity());
                 orderItem.setPrice(cartItem.getProduct().getPrice());
+                orderItem.setSubtotal(cartItem.getProduct().getPrice() * cartItem.getQuantity());
                 orderItems.add(orderItem);
             }
             order.setOrderItems(orderItems);

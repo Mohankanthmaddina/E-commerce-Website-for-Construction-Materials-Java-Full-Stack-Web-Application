@@ -25,20 +25,22 @@ public class UserProfileController {
     private PaymentService paymentService;
 
     @GetMapping
-    public String profilePage(Model model, Principal principal) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-
-        String email = principal.getName();
-        Optional<User> userOpt = userService.findByEmail(email);
-        
+    public String profilePage(Model model, Principal principal, @RequestParam(required = false) Long userId) {
+        Optional<User> userOpt = (userId != null)
+                ? userService.findById(userId)
+                : (principal != null ? userService.findByEmail(principal.getName()) : Optional.empty());
         if (userOpt.isEmpty()) {
-            return "redirect:/login";
+            model.addAttribute("error", "User not found.");
+            model.addAttribute("orders", java.util.Collections.emptyList());
+            model.addAttribute("orderCount", 0);
+            if (userId != null) {
+                model.addAttribute("userId", userId);
+            }
+            return "user-profile";
         }
-
         User user = userOpt.get();
         model.addAttribute("user", user);
+        model.addAttribute("userId", user.getId());
         
         // Get user's recent orders
         List<Order> orders = paymentService.getUserOrders(user.getId());
@@ -49,62 +51,62 @@ public class UserProfileController {
     }
 
     @GetMapping("/orders")
-    public String ordersPage(Model model, Principal principal) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-
-        String email = principal.getName();
-        Optional<User> userOpt = userService.findByEmail(email);
-        
+    public String ordersPage(Model model, Principal principal, @RequestParam(required = false) Long userId) {
+        Optional<User> userOpt = (userId != null)
+                ? userService.findById(userId)
+                : (principal != null ? userService.findByEmail(principal.getName()) : Optional.empty());
         if (userOpt.isEmpty()) {
-            return "redirect:/login";
+            model.addAttribute("error", "User not found.");
+            model.addAttribute("orders", java.util.Collections.emptyList());
+            if (userId != null) {
+                model.addAttribute("userId", userId);
+            }
+            return "user-orders";
         }
-
         User user = userOpt.get();
         List<Order> orders = paymentService.getUserOrders(user.getId());
         
         model.addAttribute("user", user);
         model.addAttribute("orders", orders);
+        model.addAttribute("userId", user.getId());
 
         return "user-orders";
     }
 
     @GetMapping("/edit")
-    public String editProfilePage(Model model, Principal principal) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-
-        String email = principal.getName();
-        Optional<User> userOpt = userService.findByEmail(email);
-        
+    public String editProfilePage(Model model, Principal principal, @RequestParam(required = false) Long userId) {
+        Optional<User> userOpt = (userId != null)
+                ? userService.findById(userId)
+                : (principal != null ? userService.findByEmail(principal.getName()) : Optional.empty());
         if (userOpt.isEmpty()) {
-            return "redirect:/login";
+            model.addAttribute("error", "User not found.");
+            // Provide an empty user to avoid Thymeleaf null-bind errors in th:object
+            model.addAttribute("user", new User());
+            if (userId != null) {
+                model.addAttribute("userId", userId);
+            }
+            return "edit-profile";
         }
-
-        model.addAttribute("user", userOpt.get());
+        User user = userOpt.get();
+        model.addAttribute("user", user);
+        model.addAttribute("userId", user.getId());
         return "edit-profile";
     }
 
     @PostMapping("/update")
-    public String updateProfile(@ModelAttribute User user, Principal principal) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-
-        String email = principal.getName();
-        Optional<User> userOpt = userService.findByEmail(email);
-        
+    public String updateProfile(@ModelAttribute User user, Principal principal, @RequestParam(required = false) Long userId) {
+        Optional<User> userOpt = (userId != null)
+                ? userService.findById(userId)
+                : (principal != null ? userService.findByEmail(principal.getName()) : Optional.empty());
         if (userOpt.isEmpty()) {
-            return "redirect:/login";
+            Long id = userId != null ? userId : null;
+            return id != null
+                    ? ("redirect:/profile?userId=" + id + "&error=User not found")
+                    : "redirect:/profile?error=User not found";
         }
-
         User existingUser = userOpt.get();
-        existingUser.setName(user.getName());
-        
+        if (user.getName() != null) existingUser.setName(user.getName());
         userService.updateUser(existingUser);
-        
-        return "redirect:/profile?success=Profile updated successfully";
+        return "redirect:/profile?userId=" + existingUser.getId() + "&success=Profile updated successfully";
     }
 }

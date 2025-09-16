@@ -74,7 +74,7 @@
                 <a href="/admin/orders" class="admin-menu">
                     <i class="fas fa-shopping-cart mr-3"></i> Orders
                 </a>
-                <a href="/admin/users" class="admin-menu">
+                <a  onclick="showUsersSection()" class="admin-menu">
                     <i class="fas fa-users mr-3"></i> Users
                 </a>
                 <a href="#" class="admin-menu">
@@ -193,9 +193,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <h2 class="text-xl font-semibold mb-4">Recent Orders</h2>
-                    <div class="space-y-3" id="recent-orders">
-                        <p class="text-gray-500 text-center py-4">No recent orders</p>
-                    </div>
+                    <div class="space-y-3" id="recent-orders"></div>
                 </div>
                 
                 <div class="bg-white rounded-lg shadow p-6">
@@ -218,6 +216,7 @@
                         </button>
                         <button class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors" onclick="showUsersSection()">
                             <i class="fas fa-users mr-2"></i> Manage Users
+                            
                         </button>
                         <button class="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors">
                             <i class="fas fa-chart-bar mr-2"></i> Generate Reports
@@ -293,6 +292,26 @@
                     document.getElementById('total-products').textContent = data.totalProducts || 0;
                     document.getElementById('total-users').textContent = data.totalUsers || 0;
                     document.getElementById('total-revenue').textContent = `₹${data.totalRevenue || 0}`;
+
+                    // Render recent orders (last 5)
+                    const recent = data.recentOrdersList || [];
+                    const container = document.getElementById('recent-orders');
+                    if (recent.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500 text-center py-4">No recent orders</p>';
+                    } else {
+                        container.innerHTML = recent.map(o => `
+                            <div class="flex justify-between items-center p-3 border rounded">
+                                <div>
+                                    <div class="font-semibold">#${o.id} • ${o.userName || '-'} </div>
+                                    <div class="text-xs text-gray-500">${o.orderDate || ''}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold">₹${o.finalAmount}</div>
+                                    <span class="px-2 py-1 text-xs rounded-full bg-gray-100">${o.status}</span>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading dashboard data:', error);

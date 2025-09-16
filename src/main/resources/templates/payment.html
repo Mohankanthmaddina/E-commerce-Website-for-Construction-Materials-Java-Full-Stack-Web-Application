@@ -211,10 +211,10 @@
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
         let selectedPayment = 'cod'; // Default to COD
-        const userId = /*[[${userId}]]*/ null;
-        const addressId = /*[[${addressId}]]*/ null;
+        const userId = [[${userId}]];
+        const addressId = [[${addressId}]];
 
         function selectPayment(method) {
             selectedPayment = method;
@@ -226,51 +226,18 @@
         }
 
         function processPayment() {
-            if (!selectedPayment) {
-                alert('Please select a payment method');
-                return;
-            }
-
             if (!userId) {
                 alert('User not found. Please login again.');
                 window.location.href = '/login';
                 return;
             }
-
-            // Show loading state
-            const button = document.querySelector('button[onclick="processPayment()"]');
-            const originalText = button.textContent;
-            button.textContent = 'Processing...';
-            button.disabled = true;
-
-            // Simulate payment processing
-            setTimeout(() => {
-                // Make API call to process payment
-                fetch('/payment/process', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `userId=${userId}&addressId=${addressId}&paymentMethod=${selectedPayment}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Redirect to user dashboard
-                        window.location.href = `/user/dashboard?userId=${userId}&orderId=${data.orderId}&success=Order placed successfully!`;
-                    } else {
-                        showNotification('Payment failed: ' + data.message, 'error');
-                        button.textContent = originalText;
-                        button.disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Payment error:', error);
-                    alert('Payment failed. Please try again.');
-                    button.textContent = originalText;
-                    button.disabled = false;
-                });
-            }, 2000); // 2 second delay to simulate payment processing
+            if (!addressId) {
+                alert('Address not selected. Please go back and choose an address.');
+                window.location.href = `/checkout?userId=${userId}`;
+                return;
+            }
+            // Directly place order and redirect to success
+            window.location.href = `/payment/direct-place?userId=${userId}&addressId=${addressId}`;
         }
 
         function updateCartCount() {

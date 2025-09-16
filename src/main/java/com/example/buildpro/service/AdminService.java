@@ -56,6 +56,8 @@ public class AdminService {
                 .mapToDouble(Order::getFinalAmount)
                 .sum();
         stats.put("totalRevenue", totalRevenue);
+        // 1% of sales amount as revenue metric
+        stats.put("revenueOnePercent", totalRevenue * 0.01);
 
         // Recent orders count
         LocalDateTime lastWeek = LocalDateTime.now().minusDays(7);
@@ -63,6 +65,56 @@ public class AdminService {
                 .filter(order -> order.getOrderDate().isAfter(lastWeek))
                 .count();
         stats.put("recentOrders", recentOrders);
+
+        // Recent orders list (top 5)
+        List<Map<String, Object>> recentOrdersList = orderRepository.findAll().stream()
+                .sorted((a, b) -> {
+                    LocalDateTime da = a.getOrderDate();
+                    LocalDateTime db = b.getOrderDate();
+                    if (da == null && db == null) return 0;
+                    if (da == null) return 1;
+                    if (db == null) return -1;
+                    return db.compareTo(da);
+                })
+                .limit(5)
+                .map(o -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", o.getId());
+                    m.put("userName", o.getUser() != null ? o.getUser().getName() : "-");
+                    m.put("finalAmount", o.getFinalAmount());
+                    m.put("status", o.getStatus() != null ? o.getStatus().toString() : "-");
+                    m.put("orderDate", o.getOrderDate());
+                    return m;
+                })
+                .toList();
+        stats.put("recentOrdersList", recentOrdersList);
+
+        // Cart item frequency (most and least occurred)
+        try {
+            // Load all cart items and aggregate by product name
+            List<CartItem> allCartItems = cartItemRepository.findAll();
+            Map<String, Long> productCounts = allCartItems.stream()
+                    .filter(ci -> ci.getProduct() != null)
+                    .collect(Collectors.groupingBy(ci -> ci.getProduct().getName(), Collectors.counting()));
+
+            if (!productCounts.isEmpty()) {
+                Map.Entry<String, Long> most = productCounts.entrySet().stream()
+                        .max(Map.Entry.comparingByValue())
+                        .orElse(null);
+                Map.Entry<String, Long> least = productCounts.entrySet().stream()
+                        .min(Map.Entry.comparingByValue())
+                        .orElse(null);
+
+                if (most != null) {
+                    stats.put("cartMostProduct", most.getKey());
+                    stats.put("cartMostCount", most.getValue());
+                }
+                if (least != null) {
+                    stats.put("cartLeastProduct", least.getKey());
+                    stats.put("cartLeastCount", least.getValue());
+                }
+            }
+        } catch (Exception ignored) {}
 
         return stats;
     }
@@ -164,6 +216,13 @@ public class AdminService {
             }
             return orderRepository.save(order);
         }).orElse(null);
+    }
+
+    public boolean deleteOrder(Long orderId) {
+        return orderRepository.findById(orderId).map(order -> {
+            orderRepository.delete(order);
+            return true;
+        }).orElse(false);
     }
 
     public Map<String, Object> getSalesReport(LocalDateTime startDate, LocalDateTime endDate) {

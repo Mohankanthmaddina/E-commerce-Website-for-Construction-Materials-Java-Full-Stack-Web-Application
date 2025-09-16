@@ -83,6 +83,27 @@ public class PaymentController {
         return "payment";
     }
 
+    // Directly place an order (no payment/verification), then redirect to success
+    @GetMapping("/direct-place")
+    public String placeOrderDirectly(@RequestParam Long userId, @RequestParam Long addressId) {
+        Optional<User> userOpt = userService.findById(userId);
+        if (userOpt.isEmpty()) {
+            return "redirect:/login?error=User not found";
+        }
+
+        User user = userOpt.get();
+        Cart cart = cartService.getCartByUser(user);
+        if (cart == null || cart.getCartItems().isEmpty()) {
+            return "redirect:/cart/view?userId=" + user.getId() + "&error=Your cart is empty";
+        }
+
+        Order order = paymentService.processPayment(userId, addressId, "cod", "COD_" + System.currentTimeMillis());
+        cartService.clearCart(user);
+
+        return "redirect:/payment/success?orderId=" + order.getId();
+    }
+    
+
     @PostMapping("/process")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> processPayment(

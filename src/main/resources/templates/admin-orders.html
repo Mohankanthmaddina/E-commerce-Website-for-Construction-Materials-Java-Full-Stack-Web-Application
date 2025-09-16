@@ -71,6 +71,18 @@
                 form.submit();
             }
         }
+
+        // Toggle status editor visibility
+        function toggleStatusEditor(orderId, hide = false) {
+            const editor = document.getElementById('status-editor-' + orderId);
+            if (editor) {
+                if (hide) {
+                    editor.classList.add('hidden');
+                } else {
+                    editor.classList.toggle('hidden');
+                }
+            }
+        }
     </script>
 </head>
 <body class="min-h-screen bg-gray-100">
@@ -139,8 +151,8 @@
                 </div>
             </div>
 
-            <!-- Orders Table -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
+            <!-- Orders Table (desktop) -->
+            <div class="hidden md:block bg-white rounded-lg shadow overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
@@ -154,12 +166,12 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <tr th:if="${#lists.isEmpty(orders)}">
+                            <tr th:if="${orders == null or #lists.isEmpty(orders)}">
                                 <td colspan="6" class="px-6 py-4 text-center text-gray-500">
                                     No orders found.
                                 </td>
                             </tr>
-                            <tr th:each="order : ${orders}">
+                            <tr th:each="order : ${orders}" th:if="${orders != null and !#lists.isEmpty(orders)}">
                                 <td class="px-6 py-4">
                                     <div class="font-medium text-blue-600">#<span th:text="${order.id}"></span></div>
                                 </td>
@@ -171,8 +183,8 @@
                                 </td>
                                 <td class="px-6 py-4" th:text="${order.orderDateDisplay}"></td>
                                 <td class="px-6 py-4">
-                                    <div class="font-medium">₹<span th:text="${order.finalAmount}"></span></div>
-                                    <div class="text-sm text-gray-500" th:if="${order.discountAmount > 0}">
+                                    <div class="font-medium">₹<span th:text="${order.finalAmount != null ? order.finalAmount : 0}"></span></div>
+                                    <div class="text-sm text-gray-500" th:if="${order.discountAmount != null and order.discountAmount > 0}">
                                         Discount: ₹<span th:text="${order.discountAmount}"></span>
                                     </div>
                                 </td>
@@ -181,20 +193,93 @@
                                           th:text="${order.status}"></span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="flex gap-2">
+                                    <div class="flex gap-3 items-center">
                                         <a th:href="@{/admin/orders/{id}(id=${order.id})}" 
                                            class="text-blue-600 hover:text-blue-800 text-sm">
                                             <i class="fas fa-eye"></i> View
                                         </a>
-                                        <button th:onclick="'updateOrderStatus(' + ${order.id} + ', \'' + ${order.status} + '\')'"
-                                                class="text-green-600 hover:text-green-800 text-sm">
-                                            <i class="fas fa-edit"></i> Update Status
+                                        <button type="button"
+                                                class="text-green-600 hover:text-green-800 text-sm"
+                                                th:data-order-id="${order.id}"
+                                                onclick="toggleStatusEditor(this.dataset.orderId)">
+                                            <i class="fas fa-edit"></i> Edit
                                         </button>
+
+                                        <form th:action="@{'/admin/orders/' + ${order.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this order?');">
+                                            <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Inline status editor -->
+                                    <div class="mt-2 hidden" th:id="'status-editor-' + ${order.id}">
+                                        <form th:action="@{'/admin/orders/' + ${order.id} + '/status'}" method="post" class="flex gap-2 items-center">
+                                            <select name="status" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                                                <option th:selected="${order.status.name() == 'PENDING'}" value="PENDING">Pending</option>
+                                                <option th:selected="${order.status.name() == 'CONFIRMED'}" value="CONFIRMED">Confirmed</option>
+                                                <option th:selected="${order.status.name() == 'SHIPPED'}" value="SHIPPED">Shipped</option>
+                                                <option th:selected="${order.status.name() == 'DELIVERED'}" value="DELIVERED">Delivered</option>
+                                                <option th:selected="${order.status.name() == 'CANCELLED'}" value="CANCELLED">Cancelled</option>
+                                            </select>
+                                            <button type="submit" class="bg-green-600 text-white text-sm px-3 py-1 rounded">Save</button>
+                                            <button type="button" class="text-gray-600 text-sm" th:data-order-id="${order.id}" onclick="toggleStatusEditor(this.dataset.orderId, true)">Cancel</button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Orders Cards (mobile) -->
+            <div class="md:hidden space-y-4">
+                <div th:if="${orders == null or #lists.isEmpty(orders)}" class="bg-white rounded-lg shadow p-4 text-center text-gray-500">
+                    No orders found.
+                </div>
+                <div th:each="order : ${orders}" th:if="${orders != null and !#lists.isEmpty(orders)}" class="bg-white rounded-lg shadow p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="font-semibold text-blue-600">#<span th:text="${order.id}"></span></div>
+                            <div class="text-sm text-gray-500" th:text="${order.orderDateDisplay}"></div>
+                        </div>
+                        <span th:class="'status-badge status-' + ${#strings.toLowerCase(order.status)}" th:text="${order.status}"></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <div class="font-medium" th:text="${order.userName}"></div>
+                            <div class="text-sm text-gray-500" th:text="${order.userEmail}"></div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-medium">₹<span th:text="${order.finalAmount != null ? order.finalAmount : 0}"></span></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <a th:href="@{/admin/orders/{id}(id=${order.id})}" class="text-blue-600 text-sm">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="#" class="text-green-600 text-sm" th:data-order-id="${order.id}" onclick="event.preventDefault(); document.getElementById('status-editor-'+this.dataset.orderId).classList.toggle('hidden')">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form th:action="@{'/admin/orders/' + ${order.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this order?');">
+                            <button type="submit" class="text-red-600 text-sm">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                    <div class="hidden mt-3" th:id="'status-editor-' + ${order.id}">
+                        <form th:action="@{'/admin/orders/' + ${order.id} + '/status'}" method="post" class="flex gap-2">
+                            <select name="status" class="border rounded px-2 py-1 text-sm">
+                                <option value="PENDING">Pending</option>
+                                <option value="CONFIRMED">Confirmed</option>
+                                <option value="SHIPPED">Shipped</option>
+                                <option value="DELIVERED">Delivered</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                            <button type="submit" class="bg-green-600 text-white text-sm px-3 py-1 rounded">Save</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -207,7 +292,7 @@
                         </div>
                         <div>
                             <p class="text-gray-600">Pending</p>
-                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(orders) ? 0 : #lists.size(#lists.select(orders, order.status == T(com.example.buildpro.model.Order$OrderStatus).PENDING))}">0</p>
+                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(orders) ? 0 : #lists.size(#lists.select(orders, it != null and it.status == T(com.example.buildpro.model.Order$OrderStatus).PENDING))}">0</p>
                         </div>
                     </div>
                 </div>
@@ -219,7 +304,7 @@
                         </div>
                         <div>
                             <p class="text-gray-600">Confirmed</p>
-                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(orders) ? 0 : #lists.size(#lists.select(orders, order.status == T(com.example.buildpro.model.Order$OrderStatus).CONFIRMED))}">0</p>
+                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(orders) ? 0 : #lists.size(#lists.select(orders, it != null and it.status == T(com.example.buildpro.model.Order$OrderStatus).CONFIRMED))}">0</p>
                         </div>
                     </div>
                 </div>
@@ -231,7 +316,7 @@
                         </div>
                         <div>
                             <p class="text-gray-600">Shipped</p>
-                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(orders) ? 0 : #lists.size(#lists.select(orders, order.status == T(com.example.buildpro.model.Order$OrderStatus).SHIPPED))}">0</p>
+                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(orders) ? 0 : #lists.size(#lists.select(orders, it != null and it.status == T(com.example.buildpro.model.Order$OrderStatus).SHIPPED))}">0</p>
                         </div>
                     </div>
                 </div>
@@ -243,7 +328,7 @@
                         </div>
                         <div>
                             <p class="text-gray-600">Delivered</p>
-                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(orders) ? 0 : #lists.size(#lists.select(orders, order.status == T(com.example.buildpro.model.Order$OrderStatus).DELIVERED))}">0</p>
+                            <p class="text-2xl font-bold" th:text="${#lists.isEmpty(orders) ? 0 : #lists.size(#lists.select(orders, it != null and it.status == T(com.example.buildpro.model.Order$OrderStatus).DELIVERED))}">0</p>
                         </div>
                     </div>
                 </div>
